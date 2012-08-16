@@ -76,6 +76,10 @@ def serialize(obj, depth=0, isModel=False, nowrapper=False):
         if '_external_serialize_fields' in dir(obj):
             for k, v in getattr(obj, '_external_serialize_fields')().items():
                 dic[k] = v
+        if '_exclude_serialize_fields' in dir(obj):
+            for k in getattr(obj, '_exclude_serialize_fields'):
+                if k in dic:
+                    del dic[k]
         ans = serialize(dic, depth=depth + 1, isModel=True, nowrapper=nowrapper)
     else:
         ans = dumps(obj, cls=DjangoJSONEncoder)
