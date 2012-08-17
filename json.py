@@ -35,24 +35,24 @@ from django.forms.models import model_to_dict
 max_depth = 20
 
 
-def serialize(obj, depth=0, isModel=False, nowrapper=False):
+def serialize(obj, depth=0, isModel=False, nowrapper=False, option=None):
     u'replacement to django original serialization method.'
     if depth > max_depth:
         raise Exception("max_depth_error")
     ans = ''
     if isModel:
         if nowrapper:
-            ans = serialize(obj, depth=depth + 1, nowrapper=nowrapper)
+            ans = serialize(obj, depth=depth + 1, nowrapper=nowrapper, option=option)
         else:
             ans = u'{"pk":%s, "fields":' % obj["id"]
-            ans += u"%s}" % serialize(obj, depth=depth + 1, nowrapper=nowrapper)
+            ans += u"%s}" % serialize(obj, depth=depth + 1, nowrapper=nowrapper, option=option)
     elif isinstance(obj, dict):
         if depth == 0:
             ans = u'{"version":"1.0","encoding":"UTF-8",'
         else:
             ans = u'{'
         for key, val in obj.items():
-            s = serialize(val, depth=depth + 1, nowrapper=nowrapper)
+            s = serialize(val, depth=depth + 1, nowrapper=nowrapper, option=option)
             key = re.sub(r'_id', '', key)
             ans += u'"%s":%s, ' % (key, s)
         ans = re.sub(r', $', '', ans)
@@ -60,27 +60,27 @@ def serialize(obj, depth=0, isModel=False, nowrapper=False):
     elif isinstance(obj, (list, ValuesListQuerySet)):
         ans = u"["
         for o in obj:
-            ans += u"%s, " % serialize(o, depth=depth + 1, nowrapper=nowrapper)
+            ans += u"%s, " % serialize(o, depth=depth + 1, nowrapper=nowrapper, option=option)
         ans = re.sub(r', $', '', ans)
         ans += u"]"
     elif isinstance(obj, ValuesQuerySet):
         ans = u"["
         for o in obj:
-            ans += u'%s, ' % serialize(o, depth=depth + 1, isModel=True, nowrapper=nowrapper)
+            ans += u'%s, ' % serialize(o, depth=depth + 1, isModel=True, nowrapper=nowrapper, option=option)
         ans = re.sub(r', $', '', ans)
         ans += u"]"
     elif isinstance(obj, QuerySet):
-        ans = serialize([o for o in obj], depth=depth + 1, nowrapper=nowrapper)
+        ans = serialize([o for o in obj], depth=depth + 1, nowrapper=nowrapper, option=option)
     elif isinstance(obj, Model):
         dic = model_to_dict(obj)
         if '_external_serialize_fields' in dir(obj):
-            for k, v in getattr(obj, '_external_serialize_fields')().items():
+            for k, v in getattr(obj, '_external_serialize_fields')(obj=obj, option=option).items():
                 dic[k] = v
         if '_exclude_serialize_fields' in dir(obj):
-            for k in getattr(obj, '_exclude_serialize_fields'):
+            for k in getattr(obj, '_exclude_serialize_fields')(obj=obj, option=option):
                 if k in dic:
                     del dic[k]
-        ans = serialize(dic, depth=depth + 1, isModel=True, nowrapper=nowrapper)
+        ans = serialize(dic, depth=depth + 1, isModel=True, nowrapper=nowrapper, option=option)
     else:
         ans = dumps(obj, cls=DjangoJSONEncoder)
     return ans
