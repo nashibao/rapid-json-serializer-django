@@ -73,17 +73,21 @@ def serialize(obj, depth=0, isModel=False, nowrapper=False, option=None):
         ans = serialize([o for o in obj], depth=depth + 1, nowrapper=nowrapper, option=option)
     elif isinstance(obj, Model):
         dic = model_to_dict(obj)
-        if '_external_serialize_fields' in dir(obj):
-            for k, v in getattr(obj, '_external_serialize_fields')(obj=obj, option=option).items():
-                dic[k] = v
+        if '_pre_serialize_fields' in dir(obj):
+            getattr(obj, '_pre_serialize_fields')(obj=obj, option=option)
         if '_global_external_serialize_fields' in dir(obj):
             for k, v in getattr(obj, '_global_external_serialize_fields')(obj=obj, option=option).items():
+                dic[k] = v
+        if '_external_serialize_fields' in dir(obj):
+            for k, v in getattr(obj, '_external_serialize_fields')(obj=obj, option=option).items():
                 dic[k] = v
         if '_exclude_serialize_fields' in dir(obj):
             for k in getattr(obj, '_exclude_serialize_fields')(obj=obj, option=option):
                 if k in dic:
                     del dic[k]
         ans = serialize(dic, depth=depth + 1, isModel=True, nowrapper=nowrapper, option=option)
+        if '_post_serialize_fields' in dir(obj):
+            getattr(obj, '_post_serialize_fields')(obj=obj, option=option)
     else:
         ans = dumps(obj, cls=DjangoJSONEncoder)
     return ans
