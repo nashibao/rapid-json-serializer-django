@@ -76,6 +76,9 @@ def serialize(obj, depth=0, isModel=False, nowrapper=False, option=None):
         if '_external_serialize_fields' in dir(obj):
             for k, v in getattr(obj, '_external_serialize_fields')(obj=obj, option=option).items():
                 dic[k] = v
+        if '_global_external_serialize_fields' in dir(obj):
+            for k, v in getattr(obj, '_global_external_serialize_fields')(obj=obj, option=option).items():
+                dic[k] = v
         if '_exclude_serialize_fields' in dir(obj):
             for k in getattr(obj, '_exclude_serialize_fields')(obj=obj, option=option):
                 if k in dic:
