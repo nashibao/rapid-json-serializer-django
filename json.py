@@ -35,7 +35,7 @@ from django.forms.models import model_to_dict
 max_depth = 20
 
 
-__serialize__model__cache__ = {}
+# __serialize__model__cache__ = {}
 
 
 def serialize(obj, depth=0, isModel=False, nowrapper=False, option=None):
@@ -75,9 +75,10 @@ def serialize(obj, depth=0, isModel=False, nowrapper=False, option=None):
     elif isinstance(obj, QuerySet):
         ans = serialize([o for o in obj], depth=depth + 1, nowrapper=nowrapper, option=option)
     elif isinstance(obj, Model):
-        if obj in __serialize__model__cache__:
-            ans = __serialize__model__cache__[obj]
-        else:
+        if True:
+        # if obj in __serialize__model__cache__:
+        #     ans = __serialize__model__cache__[obj]
+        # else:
             dic = model_to_dict(obj)
             if '_pre_serialize_fields' in dir(obj):
                 getattr(obj, '_pre_serialize_fields')(obj=obj, option=option)
@@ -92,7 +93,7 @@ def serialize(obj, depth=0, isModel=False, nowrapper=False, option=None):
                     if k in dic:
                         del dic[k]
             ans = serialize(dic, depth=depth + 1, isModel=True, nowrapper=nowrapper, option=option)
-            __serialize__model__cache__[obj] = ans
+            # __serialize__model__cache__[obj] = ans
             if '_post_serialize_fields' in dir(obj):
                 getattr(obj, '_post_serialize_fields')(obj=obj, option=option)
     else:
